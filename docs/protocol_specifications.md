@@ -19,7 +19,8 @@ The server has to ask the user directly to accept or reject the connection. For 
 IP address and port of the connection request, and ask the user to accept or reject it.  If the user accepts, the
 connection is established; otherwise, it's refused.
 
-The Client application ("the client") should show the IP address and port of the device with the client, aside of instructions about accepting the
+The Client application ("the client") should show the IP address and port of the device with the client, aside of
+instructions about accepting the
 connection request on the server.
 
 ### Handshake
