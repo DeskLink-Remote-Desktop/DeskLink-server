@@ -62,20 +62,6 @@ std::vector<std::string> setup_connection(const uint16_t port) {
 		std::cout << "Receiving connection request from " << remote_addr
 				  << ". Do you want to accept it? [y/N]" << std::endl;
 
-		{ // That does nothing, but it's here to be used later. But that does nothing (unless the hacker send the
-		  // data really quickly, but even when we connect and send the data directly from Python, it doesn't do anything
-			char buff[1];
-			int i = 0;
-
-			while (i++ == 1) { // Test
-				if (const int result = recv(client_sock, buff, sizeof(buff), MSG_PEEK); result > 0) {
-					throw connection_error(
-					"Received data before accepting the connection. Shutting down the server for security reasons."
-					);
-				}
-			}
-		}
-
 		std::getline(std::cin, accept_connection);
 		std::transform(accept_connection.begin(), accept_connection.end(), accept_connection.begin(),
 			[](const unsigned char c){ return std::tolower(c); });
@@ -83,6 +69,14 @@ std::vector<std::string> setup_connection(const uint16_t port) {
 		if (accept_connection == "y") {
 			if (client_sock == INVALID_SOCKET) {
 				throw connection_error("Couldn't accept the connection: " + std::to_string(WSAGetLastError()));
+			}
+
+			// Workaround for specification 3.1§2
+			char buff[1];
+			if (const int result = recv(client_sock, buff, sizeof(buff), MSG_PEEK); result > 0) {
+				throw connection_error(
+				"Received data before accepting the connection. Shutting down the server for security reasons."
+				);
 			}
 
 			mode = 0;
