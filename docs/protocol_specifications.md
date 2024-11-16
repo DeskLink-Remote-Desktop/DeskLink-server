@@ -3,7 +3,7 @@
 The DeskLink Protocol ("the protocol") is a powerful protocol for remote desktop applications and utilities, to send
 and receive the actions to execute on the target computer ("the computer").
 
-## Connection
+## 1. Connection
 
 - Base protocol: TCP/IP
 - Encryption: TLS
@@ -13,7 +13,7 @@ transmitted data is actions that are executed directly on the computer.
 
 To connect, the protocol needs an IP address (IPv4 or IPv6) and a port, by default the port 5055.
 
-## Authentication
+## 2. Authentication
 
 The server has to ask the user directly to accept or reject the connection. For that, the server needs to show the
 IP address and port of the connection request, and ask the user to accept or reject it.  If the user accepts, the
@@ -23,7 +23,7 @@ The Client application ("the client") should show the IP address and port of the
 instructions about accepting the
 connection request on the server.
 
-### Handshake
+### 2.1 Handshake
 
 After the user accept the connection on the server, the server should send then handshake:
 
@@ -34,7 +34,7 @@ After the user accept the connection on the server, the server should send then 
 For the time between the connection request and the receiving of the handshake, the client shouldn't send any data,
 otherwise the server will stop for security reasons (preventing unauthorized access).
 
-## Data
+## 3. Data
 
 The data is constituted of 5 bytes:
 
@@ -53,7 +53,7 @@ Here is a chart of the action codes and data:
 If any received data doesn't match the expected formats, then the server will stop for security reasons
 (preventing man-in-the-middle attacks).
 
-### Keycodes
+### 3.1 Keycodes
 
 The keycodes are JavaScript keycodes. Certain unused keycodes have been remapped to handle mouse buttons:
 
@@ -63,15 +63,15 @@ The keycodes are JavaScript keycodes. Certain unused keycodes have been remapped
 |     `2` | Mouse button 2 (right click)  |
 |     `3` | Mouse button 3 (middle click) |
 
-### Data structure
+### 3.2 Data structure
 
 The data structure can be represented as a C/C++ `struct`:
 
 ```c++
 #pragma pack(push, 1)
 typedef struct {
-	uint8_t action; // 0: Keydown 1: Keyup  2: Mouse move           3: Scroll
-	uint32_t data;  //    Keycode    Keycode   Coordinates ({x, y})    Direction (up: 0, down: 1)
+	uint8_t action;
+	uint32_t data;
 
 	void to_network() {
 		data = htonl(data);
@@ -84,7 +84,7 @@ typedef struct {
 #pragma pack(pop)
 ```
 
-## URL protocol
+## 4. URL protocol
 
 The protocol can be represented as a URL of the scheme:
 
