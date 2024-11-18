@@ -1,4 +1,5 @@
 #include "data_transmission.hpp"
+#include "errors.hpp"
 #include "metadata.hpp"
 
 #include <algorithm>
@@ -74,9 +75,8 @@ std::vector<std::string> setup_connection(const uint16_t port) {
 			// Workaround for specification 2.1§2
 			char buff[1];
 			if (const int result = recv(client_sock, buff, sizeof(buff), MSG_PEEK); result > 0) {
-				throw connection_error(
-				"Received data before accepting the connection. Shutting down the server for security reasons."
-				);
+				error("Received data before accepting the connection. "
+					"Shutting down the server for security reasons.", ErrorLevel::CriticalError);
 			}
 
 			mode = 0;
