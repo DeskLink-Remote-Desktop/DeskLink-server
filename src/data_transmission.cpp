@@ -13,15 +13,15 @@ void handshake();
 
 // Returns: { Local IP address with port, Remote IP address with port }
 std::vector<std::string> setup_connection(const uint16_t port) {
-	int error;
+	int error_code;
 	std::string local_addr;
 	std::string remote_addr;
 
 	#ifdef _WIN32
 
 	WSADATA wsa_data;
-	error = WSAStartup(MAKEWORD(2, 2), &wsa_data);
-	if (error) throw connection_error("Startup failed: " + std::to_string(WSAGetLastError()));
+	error_code = WSAStartup(MAKEWORD(2, 2), &wsa_data);
+	if (error_code) throw connection_error("Startup failed: " + std::to_string(WSAGetLastError()));
 
 	listen_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	sockaddr_in server_addr{};
@@ -30,17 +30,17 @@ std::vector<std::string> setup_connection(const uint16_t port) {
 	server_addr.sin_port = htons(port);
 	server_addr.sin_addr.s_addr = INADDR_ANY;
 
-	error = bind(listen_sock, reinterpret_cast<sockaddr *>(&server_addr), sizeof(server_addr));
-	if (error) throw connection_error("Couldn't bind to the port: " + std::to_string(WSAGetLastError()));
+	error_code = bind(listen_sock, reinterpret_cast<sockaddr *>(&server_addr), sizeof(server_addr));
+	if (error_code) throw connection_error("Couldn't bind to the port: " + std::to_string(WSAGetLastError()));
 
 	sockaddr_in local_addr_in{};
 	int addr_len = sizeof(local_addr_in);
-	error = getsockname(listen_sock, reinterpret_cast<sockaddr *>(&local_addr_in), &addr_len);
-	if (error) throw connection_error("Couldn't retrieve the local address: " + std::to_string(WSAGetLastError()));
+	error_code = getsockname(listen_sock, reinterpret_cast<sockaddr *>(&local_addr_in), &addr_len);
+	if (error_code) throw connection_error("Couldn't retrieve the local address: " + std::to_string(WSAGetLastError()));
 	local_addr = inet_ntoa(local_addr_in.sin_addr) + std::string(":") + std::to_string(ntohs(local_addr_in.sin_port));
 
-	error = listen(listen_sock, SOMAXCONN);
-	if (error) throw connection_error("Couldn't listen to the port: " + std::to_string(WSAGetLastError()));
+	error_code = listen(listen_sock, SOMAXCONN);
+	if (error_code) throw connection_error("Couldn't listen to the port: " + std::to_string(WSAGetLastError()));
 
 	std::cout << "Waiting for connection at " << local_addr << std::endl;
 
