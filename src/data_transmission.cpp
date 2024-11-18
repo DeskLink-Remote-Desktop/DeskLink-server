@@ -71,7 +71,7 @@ std::vector<std::string> setup_connection(const uint16_t port) {
 				throw connection_error("Couldn't accept the connection: " + std::to_string(WSAGetLastError()));
 			}
 
-			// Workaround for specification 3.1§2
+			// Workaround for specification 2.1§2
 			char buff[1];
 			if (const int result = recv(client_sock, buff, sizeof(buff), MSG_PEEK); result > 0) {
 				throw connection_error(
