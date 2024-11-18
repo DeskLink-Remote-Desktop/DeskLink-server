@@ -57,7 +57,7 @@ int main(const int argc, char **argv) {
 		switch (received_data.action) {
 			case 0:
 				if (received_data.data > (1 << 16) - 1) {
-					error("Bad key code number received from client."
+					error("Bad key code number received from client. "
 						"Shutting down the server for security reasons.", ErrorLevel::CriticalError);
 				}
 
@@ -66,7 +66,7 @@ int main(const int argc, char **argv) {
 				break;
 			case 1:
 				if (received_data.data > (1 << 16) - 1) {
-					error("Bad key code number received from client."
+					error("Bad key code number received from client. "
 						"Shutting down the server for security reasons.", ErrorLevel::CriticalError);
 				}
 
@@ -77,7 +77,22 @@ int main(const int argc, char **argv) {
 				const uint16_t x = received_data.data >> 16;
 				const uint16_t y = received_data.data;
 
+				int max_x;
+				int max_y;
 
+				#ifdef _WIN32
+
+				max_x = GetSystemMetrics(SM_CXSCREEN);
+				max_y = GetSystemMetrics(SM_CYSCREEN);
+
+				#else
+				error("Can't validate mouse coordinates: Unhandled platform.", ErrorLevel::Warning);
+				#endif
+
+				if (x > max_x || y > max_y) {
+					error("Bad coordinates received from client. "
+						"Shutting down the server for security reasons.", ErrorLevel::CriticalError);
+				}
 
 				mouse_move(x, y);
 				std::cout << "Move mouse to " << x << ", " << y << std::endl;
@@ -85,7 +100,7 @@ int main(const int argc, char **argv) {
 			}
 			case 3:
 				if (received_data.data > 1) {
-					error("Bad scroll direction received from client."
+					error("Bad scroll direction received from client. "
 						"Shutting down the server for security reasons.", ErrorLevel::CriticalError);
 				}
 
@@ -93,7 +108,7 @@ int main(const int argc, char **argv) {
 				std::cout << "Scroll of " << received_data.data << std::endl;
 				break;
 			default:
-				error("Bad action received from client."
+				error("Bad action received from client. "
 					"Shutting down the server for security reasons.", ErrorLevel::CriticalError);
 				break;
 		}
