@@ -11,6 +11,10 @@ SOCK_T listen_sock;
 
 void handshake();
 
+int setup_tls() {
+	return 0;
+}
+
 // Returns: { Local IP address with port, Remote IP address with port }
 std::vector<std::string> setup_connection(const uint16_t port) {
 	int error_code;
@@ -74,7 +78,7 @@ std::vector<std::string> setup_connection(const uint16_t port) {
 
 			// Workaround for specification 2.1§2
 			char buff[1];
-			if (const int result = recv(client_sock, buff, sizeof(buff), MSG_PEEK); result > 0) {
+			if (const int result = recv(client_sock, buff, sizeof(buff), 0); result > 0) {
 				error("Received data before accepting the connection. "
 					"Shutting down the server for security reasons.", ErrorLevel::CriticalError);
 			}
