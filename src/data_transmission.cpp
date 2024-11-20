@@ -12,7 +12,10 @@ SOCK_T listen_sock;
 void handshake();
 
 int setup_tls() {
+	#ifdef _WIN32
 	return 0;
+	#endif
+	return 1;
 }
 
 // Returns: { Local IP address with port, Remote IP address with port }
@@ -52,6 +55,8 @@ std::vector<std::string> setup_connection(const uint16_t port) {
 		sockaddr_in remote_addr_in{};
 		int remote_addr_len = sizeof(remote_addr_in);
 		client_sock = accept(listen_sock, reinterpret_cast<sockaddr *>(&remote_addr_in), &remote_addr_len);
+		error_code = setup_tls();
+		if (error_code) throw connection_error("Couldn't setup TLS: " + std::to_string(error_code));
 
 		u_long mode = 1;
 		ioctlsocket(client_sock, FIONBIO, &mode);
