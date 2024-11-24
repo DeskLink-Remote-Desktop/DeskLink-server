@@ -55,7 +55,7 @@ int main(const int argc, char **argv) {
 		}
 
 		switch (received_data.action) {
-			case 0:
+			case static_cast<int>(Action::Keydown):
 				if (received_data.data > (1 << 16) - 1) {
 					error("Bad key code number received from client. "
 						"Shutting down the server for security reasons.", ErrorLevel::CriticalError);
@@ -64,7 +64,7 @@ int main(const int argc, char **argv) {
 				keydown(received_data.data);
 				std::cout << "Keydown key " << received_data.data << std::endl;
 				break;
-			case 1:
+			case static_cast<int>(Action::Keyup):
 				if (received_data.data > (1 << 16) - 1) {
 					error("Bad key code number received from client. "
 						"Shutting down the server for security reasons.", ErrorLevel::CriticalError);
@@ -73,7 +73,7 @@ int main(const int argc, char **argv) {
 				keyup(received_data.data);
 				std::cout << "Keyup key " << received_data.data << std::endl;
 				break;
-			case 2: {
+			case static_cast<int>(Action::MouseMove): {
 				const uint16_t x = received_data.data >> 16;
 				const uint16_t y = received_data.data;
 
@@ -98,7 +98,7 @@ int main(const int argc, char **argv) {
 				std::cout << "Move mouse to " << x << ", " << y << std::endl;
 				break;
 			}
-			case 3:
+			case static_cast<int>(Action::Scroll):
 				if (received_data.data > 1) {
 					error("Bad scroll direction received from client. "
 						"Shutting down the server for security reasons.", ErrorLevel::CriticalError);
