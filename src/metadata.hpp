@@ -6,7 +6,7 @@
 
 #define PROTOCOL_NAME "DeskLink"
 #define NAME_STR PROTOCOL_NAME " server"
-#define BIN_NAME PROTOCOL_NAME "-server"
+#define BIN_NAME PROTOCOL_NAME "_server"
 #define PROTOCOL_VERSION "1.0"
 #define VERSION PROTOCOL_VERSION
 
