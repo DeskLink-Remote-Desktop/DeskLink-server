@@ -11,11 +11,16 @@ SOCK_T listen_sock;
 
 void handshake();
 
-int setup_tls() {
+void setup_tls() {
 	#ifdef _WIN32
-	return 0;
+
+	#elif defined(__linux__)
+
+	#elif defined(__APPLE__)
+
+	#else
+	#error Unhandled platform
 	#endif
-	return 1;
 }
 
 // Returns: { Local IP address with port, Remote IP address with port }
@@ -43,8 +48,10 @@ std::vector<std::string> setup_connection(const uint16_t port) {
 	sockaddr_in local_addr_in{};
 	int addr_len = sizeof(local_addr_in);
 	error_code = getsockname(listen_sock, reinterpret_cast<sockaddr *>(&local_addr_in), &addr_len);
-	if (error_code) throw connection_error("Couldn't retrieve the local address: " + std::to_string(WSAGetLastError()));
-	local_addr = inet_ntoa(local_addr_in.sin_addr) + std::string(":") + std::to_string(ntohs(local_addr_in.sin_port));
+	if (error_code) throw connection_error("Couldn't retrieve the local address: "
+		+ std::to_string(WSAGetLastError()));
+	local_addr = inet_ntoa(local_addr_in.sin_addr) + std::string(":")
+		+ std::to_string(ntohs(local_addr_in.sin_port));
 
 	error_code = listen(listen_sock, SOMAXCONN);
 	if (error_code) throw connection_error("Couldn't listen to the port: " + std::to_string(WSAGetLastError()));
@@ -55,8 +62,7 @@ std::vector<std::string> setup_connection(const uint16_t port) {
 		sockaddr_in remote_addr_in{};
 		int remote_addr_len = sizeof(remote_addr_in);
 		client_sock = accept(listen_sock, reinterpret_cast<sockaddr *>(&remote_addr_in), &remote_addr_len);
-		error_code = setup_tls();
-		if (error_code) throw connection_error("Couldn't setup TLS: " + std::to_string(error_code));
+		setup_tls();
 
 		u_long mode = 1;
 		ioctlsocket(client_sock, FIONBIO, &mode);
@@ -101,11 +107,19 @@ std::vector<std::string> setup_connection(const uint16_t port) {
 		std::cout << "Connection refused from " << remote_addr << std::endl;
 	}
 
+	#elif defined(__linux__)
+
+	#elif defined(__APPLE__)
+
 	#else
-	throw connection_error("Unhandled platform");
+	#error Unhandled platform
 	#endif
 
 	atexit(cleanup);
+	signal(SIGINT, [](int) {
+		std::cout << "Interrupted by user." << std::endl;
+		exit(EXIT_FAILURE);
+	});
 	return {local_addr, remote_addr};
 }
 
@@ -117,8 +131,12 @@ void handshake() {
 
 	send(client_sock, handshake_str.c_str(), handshake_str_sz, 0);
 
+	#elif defined(__linux__)
+
+	#elif defined(__APPLE__)
+
 	#else
-	throw connection_error("Unhandled platform");
+	#error Unhandled platform
 	#endif
 }
 
@@ -127,7 +145,7 @@ data get_data() {
 
 	char buff[sizeof(data)];
 
-	const int received_bytes = recv(client_sock, buff, sizeof(buff), 0);
+	int received_bytes = recv(client_sock, buff, sizeof(buff), 0);
 
 	if (received_bytes == sizeof(data)) {
 		const auto received_data = reinterpret_cast<data *>(buff);
@@ -136,19 +154,35 @@ data get_data() {
 	}
 
 	if (received_bytes == SOCKET_ERROR) {
-		if (WSAGetLastError() == WSAECONNRESET) {
-			throw connection_error("Connection closed by the client");
-		}
-
-		throw connection_error("Socket error");
+		throw connection_error("Socket error: " + std::to_string(WSAGetLastError()));
 	}
 
 	if (received_bytes == 0) {
-		throw connection_error("No data received");
+		throw connection_error("Connection closed");
+	}
+
+	if (static_cast<size_t>(received_bytes) < sizeof(data)) {
+		while (static_cast<size_t>(received_bytes) < sizeof(data)) {
+			received_bytes += recv(client_sock, buff + received_bytes, sizeof(buff) - received_bytes, 0);
+
+			if (received_bytes == SOCKET_ERROR) {
+				throw connection_error("Socket error: " + std::to_string(WSAGetLastError()));
+			}
+
+			if (received_bytes == 0) {
+				throw connection_error("Connection closed");
+			}
+		}
 	}
 
 	throw connection_error("Malformed data received");
 
+	#elif defined(__linux__)
+
+	#elif defined(__APPLE__)
+
+	#else
+	#error Unhandled platform
 	#endif
 }
 
@@ -159,5 +193,13 @@ void cleanup() {
 	closesocket(client_sock);
 	WSACleanup();
 
+	#elif defined(__linux__)
+
+	#elif defined(__APPLE__)
+
+	#else
+	#error Unhandled platform
 	#endif
+
+	std::cout << "Cleanup done." << std::endl;
 }
